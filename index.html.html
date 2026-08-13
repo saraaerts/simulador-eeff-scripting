@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Examen Final · Programación y Scripting (EEFF)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azul:#0056F3;--cyan:#49E3E7;--mint:#79FFBA;--navy:#111A29;--navy2:#062149;
+    --ok:#1FBF75;--err:#FF5A6E;--orange:#F4531F;
+    --ink:#111A29;--muted:#5B6675;--line:#E4E8EF;--card:#FFFFFF;--bg:#0B1420;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Poppins',Arial,sans-serif;color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 85% -10%, rgba(73,227,231,.18), transparent 60%),
+      radial-gradient(1000px 600px at -5% 110%, rgba(0,86,243,.22), transparent 55%),
+      var(--bg);
+    min-height:100%;display:flex;align-items:flex-start;justify-content:center;
+    padding:28px 16px 56px;-webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:760px}
+  .card{background:var(--card);border-radius:28px;box-shadow:0 30px 60px -25px rgba(6,33,73,.55);overflow:hidden;position:relative}
+  .topbar{position:relative;background:linear-gradient(120deg,var(--navy2),var(--navy));color:#fff;padding:22px 26px;overflow:hidden}
+  .topbar .skew{position:absolute;top:-40px;right:-30px;width:180px;height:180px;
+    background:linear-gradient(150deg,var(--azul),var(--cyan));transform:skewX(-14deg) rotate(8deg);opacity:.28;border-radius:24px;pointer-events:none}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em;font-size:14px}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgba(121,255,186,.2)}
+  .topbar h1{font-size:22px;font-weight:800;margin-top:10px;line-height:1.2}
+  .topbar .sub{opacity:.82;font-size:13.5px;margin-top:4px;font-weight:400}
+  .body{padding:26px}
+  .lead{color:var(--muted);font-size:15px;line-height:1.55}
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+  .fact{border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center;background:linear-gradient(180deg,#fff,#F7FAFF)}
+  .fact b{display:block;font-size:22px;font-weight:800;color:var(--azul)}
+  .fact span{font-size:12px;color:var(--muted)}
+  .rules{margin:8px 0 20px;padding:16px 18px;border-radius:16px;background:#F3F7FF;border:1px solid #DDE7FF}
+  .rules ul{list-style:none;display:grid;gap:9px}
+  .rules li{position:relative;padding-left:26px;font-size:13.5px;color:#33405A}
+  .rules li::before{content:"";position:absolute;left:0;top:3px;width:14px;height:14px;border-radius:5px;background:linear-gradient(135deg,var(--azul),var(--cyan));transform:skewX(-14deg)}
+  .opt-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;font-size:13.5px;color:#33405A}
+  .switch{position:relative;width:46px;height:26px;flex:0 0 auto;cursor:pointer}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .track{position:absolute;inset:0;background:#CBD5E4;border-radius:20px;transition:.2s}
+  .thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  .switch input:checked + .track{background:linear-gradient(135deg,var(--azul),var(--cyan))}
+  .switch input:checked + .track + .thumb{transform:translateX(20px)}
+  .btn{font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;border:none;padding:15px 30px;border-radius:40px;color:#fff;
+    background:linear-gradient(120deg,var(--azul),#2E77FF);box-shadow:0 12px 24px -10px rgba(0,86,243,.7);transition:transform .12s ease,box-shadow .12s}
+  .btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0)}
+  .btn.block{width:100%}
+  .btn.ghost{background:transparent;color:var(--azul);border:2px solid var(--azul);box-shadow:none}
+  .btn.ghost:hover{background:#F0F6FF}
+  .btn.dark{background:linear-gradient(120deg,var(--navy2),var(--navy))}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn:focus-visible,.opt:focus-visible,.switch:focus-within{outline:3px solid var(--cyan);outline-offset:3px}
+  .quiz-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:6px}
+  .counter{font-size:13px;font-weight:600;color:var(--muted)}.counter b{color:var(--ink)}
+  .badge-mod{font-size:11px;font-weight:600;color:var(--azul);background:#EAF1FF;padding:5px 11px;border-radius:20px;white-space:nowrap}
+  .timer{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;color:var(--navy);background:#EEF2F8;padding:6px 12px;border-radius:20px}
+  .timer.warn{color:#B4462F;background:#FFECE7}
+  .progress{height:8px;background:#EDF1F7;border-radius:20px;overflow:hidden;margin:12px 0 22px}
+  .progress > i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--azul),var(--cyan));transition:width .3s}
+  .qtext{font-size:18px;font-weight:600;line-height:1.5;margin-bottom:6px}
+  .multi-note{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--orange);background:#FFF0EB;border:1px solid #FFD8CC;padding:5px 11px;border-radius:20px;margin-top:10px}
+  pre.code{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--navy);color:#E7ECF3;border-radius:14px;padding:14px 16px;margin:14px 0;overflow-x:auto;border-left:4px solid var(--cyan);white-space:pre-wrap;line-height:1.5}
+  .opts{display:grid;gap:11px;margin-top:18px}
+  .opt{display:flex;align-items:flex-start;gap:13px;text-align:left;border:2px solid var(--line);background:#fff;border-radius:16px;padding:14px 16px;cursor:pointer;font-family:inherit;font-size:15px;color:var(--ink);transition:.14s;width:100%}
+  .opt:hover{border-color:#B9CBF0;background:#FAFCFF}
+  .opt .key{flex:0 0 auto;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:14px;background:#EEF2F8;color:var(--muted);transition:.14s}
+  .opts.multi .opt .key{border-radius:7px}
+  .opt.sel{border-color:var(--azul);background:#F2F7FF}
+  .opt.sel .key{background:linear-gradient(135deg,var(--azul),var(--cyan));color:#fff}
+  .opt .txt{padding-top:3px;line-height:1.45}
+  .opt.correct{border-color:var(--ok);background:#EDFBF4}.opt.correct .key{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#FFF0F2}.opt.wrong .key{background:var(--err);color:#fff}
+  .nav{display:flex;gap:12px;margin-top:24px}.nav .btn{flex:1;padding:14px}
+  .palette{display:flex;flex-wrap:wrap;gap:7px;margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+  .pdot{width:30px;height:30px;border-radius:9px;border:1.5px solid var(--line);background:#fff;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;transition:.12s}
+  .pdot.answered{background:#EAF1FF;border-color:#BCD3FF;color:var(--azul)}
+  .pdot.here{background:linear-gradient(135deg,var(--azul),var(--cyan));border-color:transparent;color:#fff}
+  .score-wrap{text-align:center;padding:8px 0 4px}
+  .ring{width:180px;height:180px;margin:0 auto 6px;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .num{position:absolute;inset:0;display:grid;place-content:center;align-content:center}
+  .ring .num b{font-size:52px;font-weight:800;line-height:1}
+  .ring .num .of{font-size:14px;color:var(--muted);font-weight:600;margin-top:2px}
+  .ring .num .raw{font-size:12px;color:var(--muted);font-weight:500;margin-top:6px}
+  .verdict{font-size:20px;font-weight:800;margin-top:4px}
+  .verdict.pass{color:var(--ok)}.verdict.fail{color:var(--err)}
+  .verdict-sub{color:var(--muted);font-size:14px;margin-top:2px;line-height:1.5}
+  .scale-cap{font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.6}
+  .mods{display:grid;gap:12px;margin:24px 0}
+  .modrow{display:grid;grid-template-columns:150px 1fr 52px;align-items:center;gap:12px}
+  .modrow .lbl{font-size:13px;font-weight:600}
+  .modrow .bar{height:10px;background:#EDF1F7;border-radius:20px;overflow:hidden}
+  .modrow .bar > i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--azul),var(--cyan))}
+  .modrow .val{font-size:13px;font-weight:700;text-align:right;color:var(--muted)}
+  .review-controls{display:flex;gap:10px;margin:6px 0 18px}
+  .chip{font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:40px;border:2px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;transition:.14s}
+  .chip.on{border-color:var(--azul);color:var(--azul);background:#F2F7FF}
+  .rev-item{border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+  .rev-item .qh{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .rev-item .qn{font-size:12px;font-weight:700;color:#fff;background:var(--muted);width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto}
+  .rev-item.good .qn{background:var(--ok)}.rev-item.bad .qn{background:var(--err)}
+  .rev-item .qq{font-size:15px;font-weight:600;line-height:1.45}
+  .rev-line{font-size:13.5px;line-height:1.5;padding:8px 12px;border-radius:11px;margin-top:8px}
+  .rev-line.you{background:#FFF0F2;color:#8A2233}.rev-line.you.ok{background:#EDFBF4;color:#0F5B3C}
+  .rev-line.sol{background:#EDFBF4;color:#0F5B3C}
+  .rev-line .tag{font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.05em;margin-right:6px;opacity:.75}
+  .expl{font-size:13.5px;color:#3A465C;line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+  .expl b{color:var(--navy)}
+  .footer-note{text-align:center;color:rgba(255,255,255,.55);font-size:11.5px;margin-top:16px}
+  .hidden{display:none !important}
+  @media (max-width:560px){
+    .facts{grid-template-columns:repeat(3,1fr);gap:8px}.fact b{font-size:18px}
+    .body{padding:20px}.topbar h1{font-size:19px}
+    .modrow{grid-template-columns:110px 1fr 44px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <div class="topbar">
+      <div class="skew"></div>
+      <div class="brand"><span class="dot"></span> TECLAB · EEFF</div>
+      <h1>Simulador de Examen Final</h1>
+      <div class="sub">Programación y Scripting · 30 preguntas de opción múltiple</div>
+    </div>
+    <div class="body">
+
+      <!-- START -->
+      <section id="start">
+        <p class="lead">Practicá con un examen completo de <b>30 preguntas</b>. Corrección automática con la escala real de Teclab: la nota va de <b>1 a 10</b> y se aprueba con <b>5</b>.</p>
+        <div class="facts">
+          <div class="fact"><b>30</b><span>preguntas</span></div>
+          <div class="fact"><b>5</b><span>para aprobar</span></div>
+          <div class="fact"><b>16</b><span>correctas mín.</span></div>
+        </div>
+        <div class="rules">
+          <ul>
+            <li>Algunas preguntas tienen una sola respuesta; otras, varias (te avisa cada una).</li>
+            <li>No hay respuestas parciales: en las de varias respuestas tenés que marcarlas <b>todas</b> las correctas para sumar el punto.</li>
+            <li>Podés volver atrás y cambiar lo que respondiste antes de finalizar.</li>
+            <li>Al terminar ves tu nota del 1 al 10 y la explicación de cada pregunta.</li>
+          </ul>
+        </div>
+        <label class="opt-row">
+          <span class="switch"><input type="checkbox" id="shuffle" checked><span class="track"></span><span class="thumb"></span></span>
+          Mezclar preguntas y opciones (cada intento es distinto)
+        </label>
+        <button class="btn block" id="startBtn">Empezar simulacro</button>
+      </section>
+
+      <!-- QUIZ -->
+      <section id="quiz" class="hidden">
+        <div class="quiz-head">
+          <span class="counter">Pregunta <b id="qNow">1</b> / 30</span>
+          <span class="badge-mod" id="qMod"></span>
+          <span class="timer" id="timer">30:00</span>
+        </div>
+        <div class="progress"><i id="bar" style="width:0%"></i></div>
+        <div class="qtext" id="qText"></div>
+        <div id="qMulti"></div>
+        <div id="qCode"></div>
+        <div class="opts" id="opts"></div>
+        <div class="nav">
+          <button class="btn ghost" id="prevBtn">Anterior</button>
+          <button class="btn" id="nextBtn">Siguiente</button>
+        </div>
+        <button class="btn dark block hidden" id="finishBtn" style="margin-top:12px">Finalizar y corregir</button>
+        <div class="palette" id="palette"></div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="results" class="hidden">
+        <div class="score-wrap">
+          <div class="ring">
+            <svg width="180" height="180" viewBox="0 0 180 180">
+              <circle cx="90" cy="90" r="78" fill="none" stroke="#EDF1F7" stroke-width="14"/>
+              <circle id="ringFill" cx="90" cy="90" r="78" fill="none" stroke="url(#g)" stroke-width="14"
+                      stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="490"/>
+              <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#0056F3"/><stop offset="1" stop-color="#49E3E7"/>
+              </linearGradient></defs>
+            </svg>
+            <div class="num"><b id="notaNum">0</b><span class="of">nota (de 10)</span><span class="raw" id="rawNum">0 / 30 correctas</span></div>
+          </div>
+          <div class="verdict" id="verdict">—</div>
+          <div class="verdict-sub" id="verdictSub"></div>
+          <div class="scale-cap">Escala: 5&nbsp;=&nbsp;16–18 · 6&nbsp;=&nbsp;19–21 · 7&nbsp;=&nbsp;22–24 · 8&nbsp;=&nbsp;25–27 · 9&nbsp;=&nbsp;28–29 · 10&nbsp;=&nbsp;30</div>
+        </div>
+        <div class="mods" id="mods"></div>
+        <div class="review-controls">
+          <button class="chip on" id="chipAll">Todas</button>
+          <button class="chip" id="chipWrong">Solo erradas</button>
+        </div>
+        <div id="review"></div>
+        <div class="nav" style="margin-top:20px">
+          <button class="btn ghost" id="retryBtn">Rehacer examen</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+  <p class="footer-note">Simulacro de práctica · Programación y Scripting · Teclab</p>
+</div>
+
+<script>
+/* ============================ BANCO DE PREGUNTAS ============================ */
+/* c = array con los índices correctos (uno = respuesta única; dos o más = múltiple) */
+const BANK = [
+
+  /* ===== PREGUNTAS REALES DEL FINAL (siempre presentes) ===== */
+  { mod:"Examen real", q:"¿Cómo podemos definir el concepto de PHP?",
+    o:["PHP es un lenguaje de programación de uso general que se adapta especialmente al desarrollo web",
+       "PHP es un compilador de script que se utiliza regularmente en el área de desarrollo",
+       "PHP es un lenguaje interpretado que utiliza la empresa durante la fase de producción"],
+    c:[0], e:"PHP es un lenguaje de script de propósito general y de código abierto, usado preferentemente en el desarrollo web de backend. El acrónimo significa «Personal Home Page»: en un principio se diseñó para agregar funcionalidades dinámicas a páginas HTML estáticas." },
+
+  { mod:"Examen real", q:"El siguiente script de PowerShell se llama «eliminarfiles.ps1». ¿Qué función cumple?",
+    code:"# eliminarfiles.ps1\n$ruta = \"C:\\temporales\"\n$limite = (Get-Date).AddDays(-7)\nGet-ChildItem -Path $ruta -File |\n  Where-Object { $_.LastWriteTime -lt $limite } |\n  Remove-Item -Force",
+    o:["Crear un nuevo archivo en la carpeta temporales",
+       "Eliminar los ficheros de un directorio que tengan más de 7 días",
+       "Agregar un nuevo ítem en la carpeta temporales",
+       "Editar los archivos de un directorio"],
+    c:[1], e:"El script recorre un directorio y elimina los ficheros cuya última modificación es anterior a 7 días (compara LastWriteTime con la fecha actual menos 7 días)." },
+
+  { mod:"Examen real", q:"Las variables pueden tomar casi cualquier nombre, pero existen restricciones. Señalá todas las que correspondan.",
+    o:["Sólo puede contener caracteres numéricos y guiones bajos",
+       "El primer carácter debe ser una letra del alfabeto o «_»",
+       "Las mayúsculas y minúsculas importan: «a» es distinto de «A»",
+       "Pueden contener espacios"],
+    c:[1,2], e:"Los nombres solo pueden contener caracteres alfanuméricos y guiones bajos (no solo numéricos), el primer carácter debe ser una letra o «_», y distinguen mayúsculas de minúsculas. No pueden contener espacios." },
+
+  { mod:"Examen real", q:"¿A qué lenguaje corresponden estas características? Gratis · código abierto · disponible en macOS, Linux y Windows · soporta múltiples paradigmas · gran comunidad · rico ecosistema de paquetes de terceros.",
+    o:["C##","Perl","C","Python"],
+    c:[3], e:"Es Python: un lenguaje de propósito general, gratuito, de código abierto y multiplataforma, con una gran comunidad y un amplio ecosistema de paquetes de terceros." },
+
+  { mod:"Examen real", q:"Sos quien más experiencia tiene con la consola de Windows y te piden examinar todos los archivos de sistema protegidos y reemplazar las versiones incorrectas por las correctas de Microsoft. ¿Qué comando usás?",
+    o:["Ping","Sfc","Getmac","Systeminfo"],
+    c:[1], e:"Sfc (System File Checker) examina la integridad de los archivos de sistema protegidos y reemplaza los dañados o incorrectos usando copias en caché del sistema." },
+
+  /* ===== MÓDULO 1 ===== */
+  { mod:"Módulo 1", q:"¿Cuál es la principal diferencia entre un lenguaje compilado y uno interpretado ante un error de sintaxis?",
+    o:["El compilado ejecuta hasta la línea del error; el interpretado no ejecuta nada",
+       "El interpretado ejecuta hasta la línea del error; el compilado no ejecuta ninguna parte",
+       "Ambos ejecutan todo el código sin importar el error",
+       "No hay diferencia entre ambos"],
+    c:[1], e:"El compilado se traduce por completo antes de correr (con un error no genera el ejecutable, no corre nada). El interpretado traduce y ejecuta línea por línea, así que corre hasta encontrar el error." },
+  { mod:"Módulo 1", q:"¿Cuál de estas afirmaciones sobre Python es correcta?",
+    o:["Es un lenguaje compilado que genera un .exe",
+       "Es interpretado y se traduce cada vez que se ejecuta",
+       "Al ser interpretado, siempre genera un archivo ejecutable",
+       "Python 3 es retrocompatible con Python 2"],
+    c:[1], e:"Python es interpretado: se traduce cada vez que se ejecuta y no genera ejecutable (esa es la trampa típica; generar ejecutable es propio de los compilados)." },
+  { mod:"Módulo 1", q:"¿Quién creó Python y en qué año se publicó su primera versión?",
+    o:["Guido van Rossum, en 1994","Guido van Rossum, en 2008","Dennis Ritchie, en 1991","James Gosling, en 2000"],
+    c:[0], e:"Python fue creado por Guido van Rossum y su primera versión se publicó en 1994. Python 3.0 llegó recién en 2008." },
+  { mod:"Módulo 1", q:"Sobre las versiones de Python, ¿cuál es correcta?",
+    o:["La 2.0 salió en 2008 y sigue teniendo soporte",
+       "La 3.0 salió en 2008 y es la versión recomendada actualmente",
+       "La 3.0 es totalmente retrocompatible con la 2.0",
+       "La 2.0 es la versión recomendada hoy en día"],
+    c:[1], e:"La 3.0 salió en 2008 y es la recomendada. No es retrocompatible con la 2.0, cuyo soporte terminó en 2020." },
+  { mod:"Módulo 1", q:"¿Cuál es la extensión de los archivos de Python?",
+    o:[".python",".pt",".py",".exe"], c:[2], e:"Los archivos de Python usan la extensión .py." },
+  { mod:"Módulo 1", q:"La función print() es…",
+    o:["Una librería externa que se instala con pip",
+       "Una función interna que muestra en pantalla el argumento que recibe",
+       "Una herramienta que traduce lenguaje máquina a lenguaje natural",
+       "Un método que solo existe dentro de un IDE"],
+    c:[1], e:"print() es una función interna (ya viene con Python, no se instala con pip) que muestra en pantalla el argumento que se le pasa." },
+  { mod:"Módulo 1", q:"¿Qué ofrece un IDE como Visual Studio Code?",
+    o:["Traduce lenguaje máquina a lenguaje natural",
+       "Coloreado de sintaxis, autocompletado y detección de errores",
+       "Reemplaza al intérprete de Python",
+       "Convierte a Python en un lenguaje compilado"],
+    c:[1], e:"Un IDE ofrece coloreado de sintaxis, autocompletado, detección de errores y trabajo con varios archivos. Traducir lenguaje máquina a natural no existe como función del IDE." },
+
+  /* ===== MÓDULO 2 ===== */
+  { mod:"Módulo 2", q:"Respecto de las variables en Python…",
+    o:["Hay que declarar el tipo de forma estática antes de usarlas",
+       "El tipo se detecta automáticamente (tipado dinámico)",
+       "Solo pueden almacenar números",
+       "No pueden cambiar de valor una vez creadas"],
+    c:[1], e:"En Python el tipo de la variable se detecta automáticamente (tipado dinámico); no se declara de forma estática como en otros lenguajes." },
+  { mod:"Módulo 2", q:"¿Cuál de los siguientes NO es un tipo de dato de Python visto en el material?",
+    o:["int","float","char","bool"], c:[2], e:"Los tipos vistos son int, float, str, bool y None. «char» no es un tipo en Python (el texto siempre es str)." },
+  { mod:"Módulo 2", q:"¿Para qué sirve pip?",
+    o:["Para ejecutar el código línea por línea","Para instalar librerías externas",
+       "Para instalar funciones internas como print()","Para traducir el código a lenguaje máquina"],
+    c:[1], e:"pip es el gestor de paquetes que instala librerías externas. Las funciones internas como print() o input() ya vienen con Python (trampa frecuente)." },
+  { mod:"Módulo 2", q:"La función input() siempre devuelve…",
+    o:["Un número entero","Un valor booleano","Texto (str), aunque el usuario tipee un número",
+       "El tipo de dato que el usuario ingrese, automáticamente"],
+    c:[2], e:"input() siempre devuelve texto (str), incluso si el usuario escribe un número. Para operarlo como número hay que convertirlo con int() o float()." },
+  { mod:"Módulo 2", q:"¿Qué ocurre al intentar concatenar con + una cadena (str) y un entero (int) sin conversión previa?",
+    o:["Python los concatena sin problema","Se produce un TypeError",
+       "El número se convierte automáticamente a texto","El texto se convierte automáticamente a número"],
+    c:[1], e:"Solo se concatenan con + variables del mismo tipo. Mezclar str e int genera un TypeError; hay que convertir con str() primero." },
+  { mod:"Módulo 2", q:"El operador módulo (%)…",
+    o:["Divide dos números y devuelve el cociente","Da el resto de una división",
+       "Multiplica dos números","Concatena dos cadenas de texto"],
+    c:[1], e:"El operador módulo (%) da el resto de una división; es clave para saber si un número es divisible por otro (resto = 0)." },
+  { mod:"Módulo 2", q:"¿Cuál de estas librerías se usa para interactuar con APIs (peticiones GET, POST)?",
+    o:["NumPy","Netmiko","Requests","pip"], c:[2], e:"Requests se usa para interactuar con APIs. NumPy es para cálculos y arrays, y Netmiko para dispositivos de red." },
+
+  /* ===== MÓDULO 3 ===== */
+  { mod:"Módulo 3", q:"¿Cuál de estas afirmaciones sobre las listas es correcta?",
+    o:["Son inmutables","Se definen con paréntesis ()","Son mutables y se definen con corchetes []","No pueden tener valores repetidos"],
+    c:[2], e:"Las listas son mutables, se definen con corchetes [] y pueden tener valores repetidos." },
+  { mod:"Módulo 3", q:"¿Qué imprime la siguiente instrucción?",
+    code:"nums = [4, 8, 15, 16]\nprint(nums[1])",
+    o:["4","8","15","Error, los índices comienzan en 1"], c:[1], e:"El índice 0 corresponde al primer elemento (4), por lo tanto nums[1] es el segundo elemento: 8." },
+  { mod:"Módulo 3", q:"El índice del primer elemento de una lista es…",
+    o:["1","0","-1","Depende del tamaño de la lista"], c:[1], e:"El primer elemento tiene índice 0. Decir que es 1 es la trampa clásica." },
+  { mod:"Módulo 3", q:"En una lista, el índice -1 hace referencia a…",
+    o:["El primer elemento","El último elemento","Un error","El segundo elemento"], c:[1], e:"Los índices negativos cuentan desde el final: -1 es el último elemento." },
+  { mod:"Módulo 3", q:"Sumar dos listas con el operador + …",
+    o:["Suma elemento a elemento","Concatena las listas","Genera un error","Multiplica los elementos entre sí"],
+    c:[1], e:"El operador + concatena las listas (las une una detrás de otra); no suma elemento a elemento como haría NumPy." },
+  { mod:"Módulo 3", q:"¿Cuál de estos NO es un método válido de listas visto en el curso?",
+    o:["append()","insert()","pop()","add()"], c:[3], e:"append(), insert() y pop() son válidos. add() (junto a remove() y start()) es un distractor típico: no es un método de listas visto en el curso." },
+  { mod:"Módulo 3", q:"Respecto de len()…",
+    o:["Es un método que se usa como lista.len()","Es una función que se usa como len(lista)",
+       "Es una librería externa que se instala con pip","Es un operador de comparación"],
+    c:[1], e:"len() es una función, no un método: se usa como len(lista), no como lista.len()." },
+  { mod:"Módulo 3", q:"¿Cuál de estas afirmaciones sobre las tuplas es correcta?",
+    o:["Son mutables y se definen con corchetes []","Se definen con paréntesis () y son inmutables",
+       "Se definen con llaves {}","No permiten acceder a sus elementos"],
+    c:[1], e:"La tupla se define con paréntesis () y es inmutable. A sus elementos se accede con corchetes [], igual que en las listas." },
+  { mod:"Módulo 3", q:"¿Cuál de estas afirmaciones sobre los diccionarios es correcta?",
+    o:["Se definen con corchetes [] y se accede por índice","Se definen con llaves {} y se accede al valor mediante la llave",
+       "Se definen con paréntesis () y son inmutables","Son idénticos a las listas en todo sentido"],
+    c:[1], e:"Los diccionarios se definen con llaves {} y almacenan pares llave:valor; se accede por la llave, no por un índice numérico." },
+
+  /* ===== MÓDULO 4 ===== */
+  { mod:"Módulo 4", q:"¿Cuál es la diferencia entre == y = ?",
+    o:["Son intercambiables","== compara dos valores y = asigna un valor a una variable",
+       "== asigna un valor y = compara dos valores","Ambos asignan valores a variables"],
+    c:[1], e:"== compara dos valores y devuelve True o False; = asigna un valor a una variable. No son intercambiables, ni siquiera dentro de un if." },
+  { mod:"Módulo 4", q:"Sobre la sentencia if…",
+    o:["Siempre que hay un if debe haber un else","Puede usarse sin else",
+       "Evalúa una cantidad definida de iteraciones","Repite un bloque mientras la condición sea True"],
+    c:[1], e:"Un if puede usarse sin else: si la condición da False y no hay else, simplemente no se ejecuta nada. No es obligatorio escribir un else." },
+  { mod:"Módulo 4", q:"El operador lógico and…",
+    o:["Requiere que al menos una condición sea verdadera","Requiere que todas las condiciones sean verdaderas",
+       "Es equivalente a la palabra clave «also»","Invierte el valor de verdad de una condición"],
+    c:[1], e:"and requiere que todas las condiciones sean verdaderas; con or basta con que una lo sea. «also» e «in» son distractores." },
+  { mod:"Módulo 4", q:"¿Cuál de estas afirmaciones sobre el ciclo for es correcta?",
+    o:["Evalúa una condición en cada vuelta, igual que el while",
+       "No evalúa una condición: itera una cantidad definida de veces o recorre una estructura",
+       "Solo sirve para iterar usando range()","Genera siempre un ciclo infinito"],
+    c:[1], e:"El for no evalúa condiciones (eso es del while): itera una cantidad definida de veces o recorre elemento por elemento una estructura como listas o diccionarios." },
+  { mod:"Módulo 4", q:"¿Qué genera la instrucción while True: ?",
+    o:["Un ciclo que no se ejecuta nunca","Un ciclo infinito (se detiene con Ctrl+C o Ctrl+Z)",
+       "Un error de sintaxis","Un ciclo que ejecuta exactamente una vez"],
+    c:[1], e:"while True genera un ciclo infinito, ya que la condición siempre es verdadera. Se detiene manualmente con Ctrl+C o Ctrl+Z." },
+  { mod:"Módulo 4", q:"¿Cuál es la diferencia entre break y continue dentro de un ciclo?",
+    o:["break salta una vuelta y sigue; continue termina todo el ciclo",
+       "break termina todo el ciclo; continue salta solo la iteración actual y continúa",
+       "Ambos terminan el ciclo por completo","Ambos saltan solo la iteración actual"],
+    c:[1], e:"break termina el ciclo por completo; continue interrumpe solo la iteración actual y sigue con las siguientes vueltas." },
+  { mod:"Módulo 4", q:"¿Qué valores genera range(5)?",
+    o:["Del 1 al 5 (cinco valores)","Del 0 al 5 (seis valores)","Del 0 al 4 (cinco valores en total)","Solamente el número 5"],
+    c:[2], e:"range(n) genera valores desde 0 hasta n-1. Por eso range(5) produce 0, 1, 2, 3 y 4: cinco valores en total." },
+  { mod:"Módulo 4", q:"¿Qué instrucción usarías dentro de un ciclo for para saltar únicamente la iteración actual y continuar con las siguientes?",
+    o:["break","pass","continue","return"], c:[2], e:"continue interrumpe solo las instrucciones restantes de la iteración actual, pero el ciclo sigue con las próximas vueltas. break, en cambio, termina el ciclo por completo." },
+];
+
+const EXAM_SIZE = 30;
+const MOD_ORDER = ["Examen real","Módulo 1","Módulo 2","Módulo 3","Módulo 4"];
+
+/* ============================ ESTADO ============================ */
+let questions=[], answers=[], current=0, timeLeft=30*60, timerId=null, reviewFilter="all";
+const $ = id => document.getElementById(id);
+const KEYS = ["A","B","C","D","E"];
+
+function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildExam(doShuffle){
+  const pinned = BANK.filter(x=>x.mod==="Examen real");
+  const pool   = BANK.filter(x=>x.mod!=="Examen real");
+  let rest = doShuffle ? shuffle(pool) : pool.slice();
+  let chosen = pinned.concat(rest.slice(0, Math.max(0, EXAM_SIZE - pinned.length)));
+  if(doShuffle) chosen = shuffle(chosen);
+  return chosen.map(item=>{
+    let order = item.o.map((_,i)=>i);
+    if(doShuffle) order = shuffle(order);
+    const opts = order.map(i=>item.o[i]);
+    const correct = item.c.map(ci=>order.indexOf(ci)).sort((a,b)=>a-b);
+    return {q:item.q, code:item.code||null, mod:item.mod, e:item.e, opts, correct, multi:item.c.length>1};
+  });
+}
+
+function calcNota(n){
+  if(n>=30) return 10;
+  if(n>=28) return 9;
+  if(n>=25) return 8;
+  if(n>=22) return 7;
+  if(n>=19) return 6;
+  if(n>=16) return 5;
+  if(n>=13) return 4;
+  if(n>=9)  return 3;
+  if(n>=5)  return 2;
+  return 1;
+}
+function isCorrect(item, sel){
+  if(sel.length!==item.correct.length) return false;
+  const s=[...sel].sort((a,b)=>a-b);
+  return s.every((v,i)=>v===item.correct[i]);
+}
+
+/* ============================ FLUJO ============================ */
+$("startBtn").addEventListener("click", ()=>{
+  questions = buildExam($("shuffle").checked);
+  answers = questions.map(()=>[]);
+  current = 0; timeLeft = 30*60;
+  $("start").classList.add("hidden");
+  $("results").classList.add("hidden");
+  $("quiz").classList.remove("hidden");
+  buildPalette(); renderQuestion(); startTimer();
+});
+
+function startTimer(){
+  clearInterval(timerId); updateTimer();
+  timerId=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0){clearInterval(timerId);finish();}},1000);
+}
+function updateTimer(){
+  const m=String(Math.floor(timeLeft/60)).padStart(2,"0"), s=String(timeLeft%60).padStart(2,"0");
+  const t=$("timer"); t.textContent=`${m}:${s}`; t.classList.toggle("warn",timeLeft<=60);
+}
+function buildPalette(){
+  const p=$("palette"); p.innerHTML="";
+  questions.forEach((_,i)=>{const b=document.createElement("button");b.className="pdot";b.textContent=i+1;
+    b.addEventListener("click",()=>{current=i;renderQuestion();});p.appendChild(b);});
+}
+function refreshPalette(){
+  [...$("palette").children].forEach((b,i)=>{b.classList.toggle("answered",answers[i].length>0);b.classList.toggle("here",i===current);});
+}
+function escapeCode(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escapeHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function renderQuestion(){
+  const item=questions[current];
+  $("qNow").textContent=current+1;
+  $("qMod").textContent=item.mod;
+  $("bar").style.width=((current+1)/questions.length*100)+"%";
+  $("qText").textContent=item.q;
+  $("qMulti").innerHTML=item.multi?`<span class="multi-note">◧ Selección múltiple · marcá todas las correctas</span>`:"";
+  $("qCode").innerHTML=item.code?`<pre class="code">${escapeCode(item.code)}</pre>`:"";
+
+  const box=$("opts"); box.innerHTML=""; box.classList.toggle("multi",item.multi);
+  const sel=answers[current];
+  item.opts.forEach((txt,i)=>{
+    const b=document.createElement("button");
+    b.className="opt"+(sel.includes(i)?" sel":"");
+    b.innerHTML=`<span class="key">${KEYS[i]}</span><span class="txt"></span>`;
+    b.querySelector(".txt").textContent=txt;
+    b.addEventListener("click",()=>toggleOption(i));
+    box.appendChild(b);
+  });
+  $("prevBtn").disabled=current===0;
+  const last=current===questions.length-1;
+  $("nextBtn").classList.toggle("hidden",last);
+  $("finishBtn").classList.toggle("hidden",!last);
+  refreshPalette();
+}
+function toggleOption(i){
+  const item=questions[current]; let sel=answers[current];
+  if(item.multi){ sel = sel.includes(i) ? sel.filter(x=>x!==i) : [...sel,i]; }
+  else { sel=[i]; }
+  answers[current]=sel; renderQuestion();
+}
+
+$("prevBtn").addEventListener("click",()=>{if(current>0){current--;renderQuestion();}});
+$("nextBtn").addEventListener("click",()=>{if(current<questions.length-1){current++;renderQuestion();}});
+$("finishBtn").addEventListener("click",()=>{
+  const sinResp=answers.filter(a=>a.length===0).length;
+  if(sinResp>0 && !confirm(`Te quedan ${sinResp} pregunta(s) sin responder. ¿Corregir igual?`)) return;
+  finish();
+});
+
+/* ============================ RESULTADOS ============================ */
+function finish(){
+  clearInterval(timerId);
+  $("quiz").classList.add("hidden");
+  $("results").classList.remove("hidden");
+
+  let correct=0; const perMod={};
+  questions.forEach((item,i)=>{
+    perMod[item.mod]=perMod[item.mod]||{ok:0,t:0};
+    perMod[item.mod].t++;
+    if(isCorrect(item,answers[i])){correct++;perMod[item.mod].ok++;}
+  });
+  const total=questions.length;
+  const nota=calcNota(correct);
+  const pct=Math.round(correct/total*100);
+
+  $("notaNum").textContent=nota;
+  $("rawNum").textContent=`${correct} / ${total} correctas`;
+  const circ=490, off=circ-(circ*pct/100), ring=$("ringFill");
+  ring.style.transition="none"; ring.style.strokeDashoffset=circ;
+  requestAnimationFrame(()=>{ring.style.transition="stroke-dashoffset 1s ease";ring.style.strokeDashoffset=off;});
+
+  const pass=nota>=5, v=$("verdict"), vs=$("verdictSub");
+  v.textContent=pass?"¡Aprobado!":"No aprobado";
+  v.className="verdict "+(pass?"pass":"fail");
+  if(pass){
+    vs.textContent=`Sacaste ${nota}/10. Superaste el mínimo de 5 puntos (16 correctas).`;
+  }else{
+    const faltan=16-correct;
+    vs.textContent=`Sacaste ${nota}/10. Te faltan ${faltan} correcta(s) para llegar a las 16 que se necesitan para aprobar (nota 5).`;
+  }
+
+  const m=$("mods"); m.innerHTML="";
+  MOD_ORDER.forEach(label=>{
+    const d=perMod[label]; if(!d) return;
+    const p=d.t?Math.round(d.ok/d.t*100):0;
+    const row=document.createElement("div"); row.className="modrow";
+    row.innerHTML=`<span class="lbl">${label}</span><span class="bar"><i style="width:${p}%"></i></span><span class="val">${d.ok}/${d.t}</span>`;
+    m.appendChild(row);
+  });
+  renderReview();
+}
+
+function renderReview(){
+  const r=$("review"); r.innerHTML="";
+  questions.forEach((item,i)=>{
+    const sel=answers[i], ok=isCorrect(item,sel);
+    if(reviewFilter==="wrong" && ok) return;
+    const el=document.createElement("div"); el.className="rev-item "+(ok?"good":"bad");
+    let html=`<div class="qh"><span class="qn">${i+1}</span><span class="qq"></span></div>`;
+    if(item.code) html+=`<pre class="code">${escapeCode(item.code)}</pre>`;
+    const yourTxt = sel.length ? sel.slice().sort((a,b)=>a-b).map(k=>`${KEYS[k]}. ${item.opts[k]}`).join("  ·  ") : "Sin responder";
+    html+=`<div class="rev-line you ${ok?'ok':''}"><span class="tag">Tu respuesta</span>${escapeHtml(yourTxt)}</div>`;
+    if(!ok){
+      const corrTxt=item.correct.map(k=>`${KEYS[k]}. ${item.opts[k]}`).join("  ·  ");
+      html+=`<div class="rev-line sol"><span class="tag">${item.multi?'Correctas':'Correcta'}</span>${escapeHtml(corrTxt)}</div>`;
+    }
+    html+=`<div class="expl">${escapeHtml(item.e)}</div>`;
+    el.innerHTML=html; el.querySelector(".qq").textContent=item.q;
+    r.appendChild(el);
+  });
+  if(!r.children.length){r.innerHTML=`<p style="text-align:center;color:var(--muted);padding:20px 0">No hay preguntas erradas. ¡Impecable! 🎉</p>`;}
+}
+$("chipAll").addEventListener("click",()=>{reviewFilter="all";toggleChips();renderReview();});
+$("chipWrong").addEventListener("click",()=>{reviewFilter="wrong";toggleChips();renderReview();});
+function toggleChips(){$("chipAll").classList.toggle("on",reviewFilter==="all");$("chipWrong").classList.toggle("on",reviewFilter==="wrong");}
+$("retryBtn").addEventListener("click",()=>{$("results").classList.add("hidden");$("start").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});});
+</script>
+</body>
+</html>
